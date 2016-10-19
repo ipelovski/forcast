@@ -3,45 +3,110 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Време</title>
-		<style>
+		<style type="text/css">
 			li > img {
 				vertical-align: middle;
 			}
 		</style>
+		<script type="text/javascript" src="/js/ejs.min.js"></script>
 	</head>
 	<body>
-		<h4>Населено място: <%= forcast.city.name %></h4>
-		<p>
-			Температурата за следващите пет дни е между
-			<%= Math.round(forcast.minTemp) %>°C и <%= Math.round(forcast.maxTemp) %>°C
-		</p>
-		<p>Повече подробности:
-			<ul>
-			<%
-				for(var i = 0; i < forcast.data.length; i++) {
-					var group = forcast.data[i];
-					var day = new Date(group.day * 1000);
-			%>
-				<li>
-					<%= day.getDate() + '.' + (day.getMonth() + 1) + '.' + day.getFullYear() %>
-					<ul>
-					<%
-						for(var j = 0; j < group.data.length; j++) {
-							var item = group.data[j];
-							var time = new Date(item.time * 1000);
-					%>
-						<li>
-							<%= time.getHours().toLocaleString('bg',{minimumIntegerDigits:2}) + ':' + time.getMinutes().toLocaleString('bg',{minimumIntegerDigits:2}) %>
-							-
-							<%= Math.round(item.temp) %>°C
-							<img src="<%= 'http://openweathermap.org/img/w/' + item.icon + '.png' %>">
-							<%= item.description %>
-						</li>
-					<% } %>
-					</ul>
-				</li>
-			<% } %>
-			</ul>
-		</p>
+		<script id="template" type="text/template">
+			<h4>Населено място: <%%= forcast.city.name %></h4>
+			<p>
+				Температурата за следващите пет дни е между
+				<%%= Math.round(forcast.minTemp) %>°C и <%%= Math.round(forcast.maxTemp) %>°C
+			</p>
+			<p>Повече подробности:
+				<ul>
+				<%%
+					for(var i = 0; i < forcast.data.length; i++) {
+						var group = forcast.data[i];
+						var day = new Date(group.day * 1000);
+				%>
+					<li>
+						<%%= day.getDate() + '.' + (day.getMonth() + 1) + '.' + day.getFullYear() %>
+						<ul>
+						<%%
+							for(var j = 0; j < group.data.length; j++) {
+								var item = group.data[j];
+								var time = new Date(item.time * 1000);
+						%>
+							<li>
+								<%%= time.getHours().toLocaleString('bg',{minimumIntegerDigits:2}) + ':' + time.getMinutes().toLocaleString('bg',{minimumIntegerDigits:2}) %>
+								-
+								<%%= Math.round(item.temp) %>°C
+								<img src="<%%= 'http://openweathermap.org/img/w/' + item.icon + '.png' %>">
+								<%%= item.description %>
+							</li>
+						<%% } %>
+						</ul>
+					</li>
+				<%% } %>
+				</ul>
+			</p>
+		</script>
+		<div>
+			<input type="text" id="city" name="city">
+			<button id="search">Търси</button>
+		</div>
+		<div id="content">
+		</div>		
+		<script type="text/javascript">
+			(function () {
+				function search() {
+					var city = document.getElementById('city').value;
+					window.location.assign('/forcast5?city=' + city);
+				}
+				function load() {
+					var template = document.getElementById('template').innerHTML;
+					document.getElementById('content').innerHTML =
+						ejs.render(template, {forcast: forcast});
+				}
+				var secondsInDay = 24 * 60 * 60;
+				function transform(value) {
+					var forcast = {
+						city: value.city,
+						minTemp: value.data.reduce(function (min, item) {
+							return Math.min(min, item.temp);
+						}, Number.MAX_VALUE),
+						maxTemp: value.data.reduce(function (max, item) {
+							return Math.max(max, item.temp);
+						}, Number.MIN_VALUE),
+						data: value.data.reduce(function (groups, item) {
+							var key = new Date(item.time * 1000).toDateString();
+							var group = groups.find(function (group) {
+								return group.key === key;
+							});
+							if (group === undefined) {
+								group = {
+									key: key,
+									day: item.time,
+									data: []
+								};
+								groups.push(group);
+							}
+							group.data.push(item);
+							return groups;
+						}, [])
+					};
+					return forcast;
+				}
+				document.addEventListener('DOMContentLoaded', function (e) {
+					document.getElementById('search')
+						.addEventListener('click', search);
+					document.getElementById('city')
+						.addEventListener('keypress', function (e) {
+							if (e.keyCode === 13) {
+								search();
+							}
+						});
+
+					load();
+				});
+				var data = <%- JSON.stringify(forcast) %>;
+				var forcast = transform(data);
+			}());
+		</script>
 	</body>
 </html>

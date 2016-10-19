@@ -1,12 +1,17 @@
 var http = require('http');
 var Arrow = require('arrow');
+var request = require('request');
 
-var forcastBaseUrl = 'http://api.openweathermap.org/data/2.5/forecast?q=Sofia,BG&units=metric&lang=bg&appid=';
+var ipware = require('ipware')();
+
+var ipInfoUrl = 'http://ipinfo.io/';
+var forcastBaseUrl = 'http://api.openweathermap.org/' +
+  'data/2.5/forecast?units=metric&lang=bg&type=accurate&appid=';
 var forcastApiId = '106c8f46bb6cd322faf55e637484931e';
+var forcastUrl = forcastBaseUrl + forcastApiId;
 
 function transform(body) {
   var value = JSON.parse(body);
-  ne raboti
   return {
     city: {
       name: value.city.name,
@@ -38,30 +43,48 @@ var forcast5 = Arrow.API.extend({
   // after: false,//['cachingBlock', 'analyticsBlock'],
   parameters: {
     city: {
-      description: 'Specifies the target city for the forcast.'
+      description: 'Specifies the target city for the forcast.',
+      optional: true
     }
   },
   action: function (req, res, next) {
-    function callback(forcastResponse) {
-      var chunks = [];
-      forcastResponse
-        .on('data', function (chunk) {
-          chunks.push(chunk);
-        })
-        .on('end', function () {
-          var body = Buffer.concat(chunks).toString();
-          var forcast = transform(body);
-          res.send(forcast);
-          next();
-        })
-        .on('error', function (e) {
-          next(e);
-        });
+    var city = req.params.city;
+    if (city !== undefined && city !== '') {
+      getForcast(city);
     }
-    var forcastRequest = http.get(forcastBaseUrl + forcastApiId, callback)
-      .on('error', function (e) {
-        next(e);
+    else {
+      getIpAddress();
+    }
+    
+    function getForcast(city) {
+      var url = forcastUrl + '&q=' + city;
+      request(url, function (error, response, body) {
+        if (error) {
+          return next(error);
+        }
+        if (response.statusCode !== 200) {
+          return next(new Error(body));
+        }
+        var forcast = transform(body);
+        res.send(forcast);
+        next();
       });
+    }
+    function getIpAddress() {
+      var ipInfo = ipware.get_ip(req);
+      var url = ipInfoUrl;
+      if (ipInfo.clientIpRoutable) {
+        url += ipInfo.clientIp;
+      }
+      request(url, function(error, response, body) {
+        if (error) {
+          return next(error);
+        }
+        var info = JSON.parse(body);
+        var city = info.city + ',' + info.country;
+        getForcast(city);
+      });
+    }
   }
 });
 
