@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Време</title>
+		<style>
+			li > img {
+				vertical-align: middle;
+			}
+		</style>
+	</head>
+	<body>
+		<h4>Населено място: <%= forcast.city.name %></h4>
+		<p>
+			Температурата за следващите пет дни е между
+			<%= Math.round(forcast.minTemp) %>°C и <%= Math.round(forcast.maxTemp) %>°C
+		</p>
+		<p>Повече подробности:
+			<ul>
+			<%
+				for(var i = 0; i < forcast.data.length; i++) {
+					var group = forcast.data[i];
+					var day = new Date(group.day * 1000);
+			%>
+				<li>
+					<%= day.getDate() + '.' + (day.getMonth() + 1) + '.' + day.getFullYear() %>
+					<ul>
+					<%
+						for(var j = 0; j < group.data.length; j++) {
+							var item = group.data[j];
+							var time = new Date(item.time * 1000);
+					%>
+						<li>
+							<%= time.getHours().toLocaleString('bg',{minimumIntegerDigits:2}) + ':' + time.getMinutes().toLocaleString('bg',{minimumIntegerDigits:2}) %>
+							-
+							<%= Math.round(item.temp) %>°C
+							<img src="<%= 'http://openweathermap.org/img/w/' + item.icon + '.png' %>">
+							<%= item.description %>
+						</li>
+					<% } %>
+					</ul>
+				</li>
+			<% } %>
+			</ul>
+		</p>
+	</body>
+</html>

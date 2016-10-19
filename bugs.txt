@@ -1,0 +1,5 @@
+1. Wrong documentation
+http://docs.appcelerator.com/platform/latest/#!/guide/Arrow_APIs-section-43299002_ArrowAPIs-InvokeAPIEndpointsinArrow
+`res.render('car', results);`
+should be
+`res.render('car', results, next);`
