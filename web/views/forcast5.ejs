@@ -106,6 +106,28 @@
 				});
 				var data = <%- JSON.stringify(forcast) %>;
 				var forcast = transform(data);
+
+				makeRequest('/forcast5/a');
+
+				var httpRequest;
+				function makeRequest(url) {
+					httpRequest = new XMLHttpRequest();
+
+					httpRequest.onreadystatechange = dataLoaded;
+					httpRequest.open('GET', url);
+					httpRequest.send();
+				}
+
+				function dataLoaded() {
+					console.log('data loaded', arguments)
+					if (httpRequest.readyState === XMLHttpRequest.DONE) {
+						if (httpRequest.status === 200) {
+							console.log(httpRequest.responseText);
+						} else {
+							console.log('There was a problem with the request.');
+						}
+					}
+				}
 			}());
 		</script>
 	</body>

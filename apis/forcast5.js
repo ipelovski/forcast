@@ -2,13 +2,8 @@ var http = require('http');
 var Arrow = require('arrow');
 var request = require('request');
 
-var ipware = require('ipware')();
-
-var ipInfoUrl = 'http://ipinfo.io/';
 var forcastBaseUrl = 'http://api.openweathermap.org/' +
   'data/2.5/forecast?units=metric&lang=bg&type=accurate&appid=';
-var forcastApiId = '106c8f46bb6cd322faf55e637484931e';
-var forcastUrl = forcastBaseUrl + forcastApiId;
 
 function transform(body) {
   var value = JSON.parse(body);
@@ -39,25 +34,37 @@ var forcast5 = Arrow.API.extend({
   nickname: '/api/forcast5',
   method: 'GET',
   description: 'Rertrives a 5 days forcast. Renews every 3 hours.',
-  // before: false,//'formatRequestBlock',
-  // after: false,//['cachingBlock', 'analyticsBlock'],
   parameters: {
     city: {
       description: 'Specifies the target city for the forcast.',
       optional: true
+    },
+    lat: {
+      description: 'Specifies the latitude of the location for the forcast.',
+      optional: true
+    },
+    lon: {
+      description: 'Specifies the longitude of the location for the forcast.',
+      optional: true
     }
   },
   action: function (req, res, next) {
+    var config = req.server.config;
+    var forcastUrl = forcastBaseUrl + config.forcastApiId;
+    var lat = req.params.lat;
+    var lon = req.params.lon;
     var city = req.params.city;
-    if (city !== undefined && city !== '') {
-      getForcast(city);
+    if (lat != null && lon != null) {
+      getForcastByLocation(lat, lon);
     }
     else {
-      getIpAddress();
+      if (city == null || city === '') {
+        city = config.defaultCity;
+      }
+      getForcastByCity(city);
     }
-    
-    function getForcast(city) {
-      var url = forcastUrl + '&q=' + city;
+
+    function requestForcast(url) {
       request(url, function (error, response, body) {
         if (error) {
           return next(error);
@@ -70,20 +77,13 @@ var forcast5 = Arrow.API.extend({
         next();
       });
     }
-    function getIpAddress() {
-      var ipInfo = ipware.get_ip(req);
-      var url = ipInfoUrl;
-      if (ipInfo.clientIpRoutable) {
-        url += ipInfo.clientIp;
-      }
-      request(url, function(error, response, body) {
-        if (error) {
-          return next(error);
-        }
-        var info = JSON.parse(body);
-        var city = info.city + ',' + info.country;
-        getForcast(city);
-      });
+    function getForcastByLocation(lat, lon) {
+      var url = forcastUrl + '&lat=' + lat + '&lon=' + lon;
+      requestForcast(url);
+    }
+    function getForcastByCity(city) {
+      var url = forcastUrl + '&q=' + city;
+      requestForcast(url);
     }
   }
 });

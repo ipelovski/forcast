@@ -86,5 +86,11 @@ module.exports = {
 
 	// your connector configuration goes here
 	connectors: {
-	}
+	},
+
+	// the API id used for retrieving forcasts
+	forcastApiId: '106c8f46bb6cd322faf55e637484931e',
+
+	// the default city which forcast is displayed when no information is provided
+	defaultCity: 'Sofia,BG'
 };

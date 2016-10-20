@@ -18,7 +18,7 @@ var forcast5Route = Arrow.Router.extend({
 	action: function (req, resp, next) {
 	 	function render(err, results) {
 	 		if (err) {
-	 			return resp.render('forcast5', {
+	 			return resp.send({
 					forcast: {
 						city: {
 							name: 'N/A',
@@ -28,16 +28,16 @@ var forcast5Route = Arrow.Router.extend({
 						minTemp: 'N/A',
 						maxTemp: 'N/A'
 					}
-				}, next);
-	 			// return next(err);
+				});
 	 		}
 	 		var forcast = results;
-			resp.render('forcast5', {
-				forcast: transform(forcast)
-			}, next);
+			resp.send(transform(forcast));
+			next();
 		}
 		req.server.getAPI('/api/forcast5', 'GET').execute({
-			city: req.query.city
+			city: req.query.city,
+			lat: req.query.lat,
+			lon: req.query.lon
 		}, render);
 	}
 });
