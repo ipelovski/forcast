@@ -18,16 +18,15 @@ var forcast5Route = Arrow.Router.extend({
 	action: function (req, resp, next) {
 	 	function render(err, results) {
 	 		if (err) {
+	 			console.error(err);
 	 			return resp.send({
-					forcast: {
-						city: {
-							name: 'N/A',
-							country: 'N/A'
-						},
-						data: [],
-						minTemp: 'N/A',
-						maxTemp: 'N/A'
-					}
+					city: {
+						name: 'N/A',
+						country: 'N/A'
+					},
+					data: [],
+					minTemp: 'N/A',
+					maxTemp: 'N/A'
 				});
 	 		}
 	 		var forcast = results;

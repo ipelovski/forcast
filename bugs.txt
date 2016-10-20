@@ -3,3 +3,4 @@ http://docs.appcelerator.com/platform/latest/#!/guide/Arrow_APIs-section-4329900
 `res.render('car', results);`
 should be
 `res.render('car', results, next);`
+2. Arrow Response `.json` method does not call `.send` method internally, so this line is not executed `this.rawbody = this.body = this.unformattedBody = body;`. This causes response misbehaviour when calling '.json'.

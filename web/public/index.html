@@ -8,11 +8,10 @@
         vertical-align: middle;
       }
     </style>
-    <script type="text/javascript" src="/js/ejs.min.js"></script>
   </head>
   <body>
     <script id="template" type="text/template">
-      <h4>Населено място: <%= forcast.city.name %></h4>
+      <h4>Населено място: <%= forcast.city.name %> <%= forcast.city.country %></h4>
       <p>
         Температурата за следващите пет дни е между
         <%= Math.round(forcast.minTemp) %>°C и <%= Math.round(forcast.maxTemp) %>°C
@@ -36,7 +35,7 @@
                 <%= time.getHours().toLocaleString('bg',{minimumIntegerDigits:2}) + ':' + time.getMinutes().toLocaleString('bg',{minimumIntegerDigits:2}) %>
                 -
                 <%= Math.round(item.temp) %>°C
-                <img src="<%= 'http://openweathermap.org/img/w/' + item.icon + '.png' %>">
+                <img src="<%= '//openweathermap.org/img/w/' + item.icon + '.png' %>">
                 <%= item.description %>
               </li>
             <% } %>
@@ -52,130 +51,7 @@
     </div>
     <div id="content">
     </div>    
-    <script type="text/javascript">
-      (function () {
-        var baseUrl = '/forcast5';
-        var secondsInDay = 24 * 60 * 60;
-        var httpRequest;
-        document.addEventListener('DOMContentLoaded', function (e) {
-          document.getElementById('search')
-            .addEventListener('click', search);
-          document.getElementById('city')
-            .addEventListener('keypress', function (e) {
-              if (e.keyCode === 13) {
-                search();
-              }
-            });
-        });
-        loadForcast();
-
-        function search() {
-          var city = document.getElementById('city').value;
-          window.location.hash = city;
-          loadForcast();
-        }
-        
-        function load(forcast) {
-          var template = document.getElementById('template').innerHTML;
-          document.getElementById('content').innerHTML =
-            ejs.render(template, {forcast: forcast});
-        }
-        
-        function transform(value) {
-          var forcast = {
-            city: value.city,
-            minTemp: value.data.reduce(function (min, item) {
-              return Math.min(min, item.temp);
-            }, Number.MAX_VALUE),
-            maxTemp: value.data.reduce(function (max, item) {
-              return Math.max(max, item.temp);
-            }, Number.MIN_VALUE),
-            data: value.data.reduce(function (groups, item) {
-              var key = new Date(item.time * 1000).toDateString();
-              var group = groups.find(function (group) {
-                return group.key === key;
-              });
-              if (group === undefined) {
-                group = {
-                  key: key,
-                  day: item.time,
-                  data: []
-                };
-                groups.push(group);
-              }
-              group.data.push(item);
-              return groups;
-            }, [])
-          };
-          return forcast;
-        }
-        
-        function loadForcast() {
-          if (location.hash !== '' && location.hash !== '#') {
-            var city = location.hash.substring(1);
-            getForcast({
-              city: city
-            });
-          }
-          else {
-            if ('geolocation' in navigator) {
-              navigator.geolocation.getCurrentPosition(
-                function (position) {
-                  getForcast({
-                    coords: position.coords
-                  });
-                }, function (err) {
-                  getForcast();
-                })
-            } else {
-              getForcast();
-            }
-          }
-        }
-
-        function getForcast(options) {
-          options = options != null ? options : {};
-          if (options.coords != null) {
-            makeRequest('lat=' + options.coords.latitude +
-              '&lon=' + options.coords.longitude);
-          }
-          else if (options.city != null && options.city !== '') {
-            makeRequest('city=' + options.city);
-          }
-          else {
-            makeRequest('');
-          }
-        }
-        
-        function makeRequest(params) {
-          httpRequest = new XMLHttpRequest();
-
-          httpRequest.onreadystatechange = dataLoaded;
-          httpRequest.open('GET', baseUrl + '?' + params);
-          httpRequest.send();
-        }
-
-        function dataLoaded() {
-          if (httpRequest.readyState === XMLHttpRequest.DONE) {
-            if (httpRequest.status === 200) {
-              var data = JSON.parse(httpRequest.responseText);
-              var forcast = transform(data);
-              load(forcast);
-            } else {
-              var forcast = {
-                city: {
-                  name: 'N/A',
-                  country: 'N/A'
-                },
-                data: [],
-                minTemp: 'N/A',
-                maxTemp: 'N/A'
-              };
-              load(forcast);
-            }
-          }
-        }
-      }());
-    </script>
+    <script type="text/javascript" src="/js/ejs.min.js"></script>
+    <script type="text/javascript" src="/js/index.js"></script>
   </body>
 </html>

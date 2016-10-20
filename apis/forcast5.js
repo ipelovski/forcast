@@ -5,7 +5,7 @@ var request = require('request');
 var forcastBaseUrl = 'http://api.openweathermap.org/' +
   'data/2.5/forecast?units=metric&lang=bg&type=accurate&appid=';
 
-function transform(body) {
+function extract(body) {
   var value = JSON.parse(body);
   return {
     city: {
@@ -61,6 +61,7 @@ var forcast5 = Arrow.API.extend({
       if (city == null || city === '') {
         city = config.defaultCity;
       }
+      city = encodeURIComponent(city);
       getForcastByCity(city);
     }
 
@@ -72,7 +73,7 @@ var forcast5 = Arrow.API.extend({
         if (response.statusCode !== 200) {
           return next(new Error(body));
         }
-        var forcast = transform(body);
+        var forcast = extract(body);
         res.send(forcast);
         next();
       });
